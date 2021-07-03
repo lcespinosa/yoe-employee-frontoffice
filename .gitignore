@@ -21,3 +21,10 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+/.idea/.gitignore
+/.idea/sonarlint/issuestore/index.pb
+/.idea/modules.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/vcs.xml
+/yarn.lock
+/.idea/yoe-employee-react.iml
