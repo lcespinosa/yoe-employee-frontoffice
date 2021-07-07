@@ -1,0 +1,12 @@
+.rightMenu {
+    float: right;
+}
+
+.logo {
+    display: inline-block;
+}
+
+.logo img {
+    width: 10em;
+    margin-left: -15px;
+}
