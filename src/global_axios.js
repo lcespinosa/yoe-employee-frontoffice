@@ -1,5 +1,6 @@
 import axios from 'axios';
-import {notification} from "antd";
+import {message, notification} from "antd";
+import {history, store} from "./_helpers";
 
 console.log(process.env.REACT_APP_API_URL);
 const instance = axios.create({
@@ -8,10 +9,11 @@ const instance = axios.create({
 
 instance.defaults.headers.common['Authorization'] = 'AUTH TOKEN';
 instance.defaults.headers.post['Content-Type'] = 'application/json';
-/*
+
 //Request/Response interceptor
-instance.interceptors.request.use((request) => {
-  return request;
+instance.interceptors.request.use((config) => {
+  config.headers.Authorization = 'Bearer ' + localStorage.getItem('access_token');
+  return config;
 });
 
 instance.interceptors.response.use((response) => {
@@ -25,16 +27,14 @@ instance.interceptors.response.use((response) => {
       message: 'Error de seguridad',
       description: 'Ha ocurrido un error con la sesión del usuario. El usuario no está autenticado, las credenciales son incorrectas o ha expirado la sesion.',
     });
+    history.push('/login');
     break;
-    default: notification.error({
-      placement: 'bottomRight',
-      message: 'Error general',
-      description: 'Ha ocurrido un error de conexión, inténtelo nuevamente.'
-    });
+    default:
+      message.error({ content: 'La operación ha fallado, inténtelo de nuevo.', key: 'message_operation' });
     break;
   }
 
   return Promise.reject(error);
-});*/
+});
 
 export default instance;

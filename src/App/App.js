@@ -19,10 +19,6 @@ class App extends Component {
     history.listen((location, action) => {
       // clear alert on location change
       dispatch(alertActions.clear());
-
-      if (location === '/logout') {
-        dispatch(userActions.logout());
-      }
     });
   }
 
@@ -30,9 +26,9 @@ class App extends Component {
     return (
       <Router history={history}>
         <Switch>
-          <PrivateRoute path='/' exact component={Home}/>
+          <PrivateRoute path='/front' component={Home}/>
           <Route path='/login' component={Login}/>
-          <Redirect to='/' />
+          <Redirect to='/front' />
         </Switch>
       </Router>
     );

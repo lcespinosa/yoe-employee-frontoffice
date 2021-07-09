@@ -21,7 +21,7 @@ function login(username, password) {
             localStorage.setItem('user', JSON.stringify(user));
             localStorage.setItem('access_token', access_token);
 
-            return user;
+            return {user, access_token};
         });
 }
 

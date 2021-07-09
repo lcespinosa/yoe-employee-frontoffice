@@ -5,6 +5,7 @@ import {
   SettingOutlined,
   DeploymentUnitOutlined
 } from "@ant-design/icons";
+import {Link} from "react-router-dom";
 
 const { Sider } = Layout;
 const { SubMenu } = Menu;
@@ -32,7 +33,7 @@ class MainSideBar extends React.Component {
           style={{ height: '100%', borderRight: 0 }}
         >
           <SubMenu key="sub1" icon={<DeploymentUnitOutlined />} title="Management">
-            <Menu.Item key="1">Projects</Menu.Item>
+            <Menu.Item key="1"><Link to='/front/projects'>Projects</Link></Menu.Item>
             <Menu.Item key="2">Tasks</Menu.Item>
             <Menu.Item key="3">Manual entries</Menu.Item>
           </SubMenu>

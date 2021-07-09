@@ -2,7 +2,7 @@ import {PageHeader} from "antd";
 import './ContentPage.css';
 
 const ContentPage = props => (
-  <div className="site-page-header-ghost-wrapper">
+  <div className="page-header-wrapper">
     <PageHeader
       ghost={false}
       onBack={() => window.history.back()}
@@ -12,5 +12,10 @@ const ContentPage = props => (
     >
       {props.descriptions}
     </PageHeader>
+
+    {props.children}
+
   </div>
-)
+);
+
+export default ContentPage;

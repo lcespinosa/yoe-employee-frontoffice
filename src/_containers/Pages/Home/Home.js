@@ -2,10 +2,21 @@ import {Layout} from "antd";
 import MainHeader from "../../../_layout/MainHeader";
 import MainSideBar from "../../../_layout/MainSideBar";
 import React from "react";
+import {Switch, useRouteMatch} from "react-router";
+import {PrivateRoute} from "../../../_components";
+
+import Projects from "../Projects/Projects";
+import Test from "../../../_components/Test";
+import {Redirect} from "react-router-dom";
 
 const {Content} = Layout;
 
 const Home = (props) => {
+
+  let { path, url } = useRouteMatch();
+  console.log(path);
+
+
   return (
     <Layout>
       <MainHeader />
@@ -21,7 +32,11 @@ const Home = (props) => {
               minHeight: 280,
             }}
           >
-            Content
+
+            <Switch>
+              <PrivateRoute path={path + '/projects'} component={Projects} />
+              <Redirect to={path + '/projects'} />
+            </Switch>
           </Content>
         </Layout>
       </Layout>
