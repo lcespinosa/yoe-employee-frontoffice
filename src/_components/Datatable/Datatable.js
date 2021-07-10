@@ -72,22 +72,24 @@ export const Datatable = forwardRef((props, ref) => {
   };
 
   const fetch = (params = {}) => {
-    setLoading({loading: true});
-    axios.get(`/${props.ajax}`, {params: params})
-      .then(({data}) => {
-        setTableData({data: data.data});
-        setLoading({loading: false});
-        setPagination({
-          pagination: {
-            current: data.meta.pagination.current_page,
-            pageSize: data.meta.pagination.per_page,
-            total: data.meta.pagination.total
-          },
+    if (props.ajax.length > 0) {
+      setLoading({loading: true});
+      axios.get(`/${props.ajax}`, {params: params})
+        .then(({data}) => {
+          setTableData({data: data.data});
+          setLoading({loading: false});
+          setPagination({
+            pagination: {
+              current: data.meta.pagination.current_page,
+              pageSize: data.meta.pagination.per_page,
+              total: data.meta.pagination.total
+            },
+          });
+          if (props.hasSelection) {
+            onSelectChange([]);
+          }
         });
-        if (props.hasSelection) {
-          onSelectChange([]);
-        }
-      });
+    }
   }
 
   return (

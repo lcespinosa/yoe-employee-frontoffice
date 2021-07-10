@@ -6,7 +6,7 @@ import {Switch, useRouteMatch} from "react-router";
 import {PrivateRoute} from "../../../_components";
 
 import Projects from "../Projects/Projects";
-import Test from "../../../_components/Test";
+import Tasks from "../Tasks/Tasks";
 import {Redirect} from "react-router-dom";
 
 const {Content} = Layout;
@@ -35,6 +35,7 @@ const Home = (props) => {
 
             <Switch>
               <PrivateRoute path={path + '/projects'} component={Projects} />
+              <PrivateRoute path={path + '/tasks'} component={Tasks} />
               <Redirect to={path + '/projects'} />
             </Switch>
           </Content>

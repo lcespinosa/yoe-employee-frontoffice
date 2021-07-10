@@ -20,6 +20,10 @@ export const CrudForm = forwardRef(( props, ref ) => {
     edit(record, ...loadFns) {
       setVisible({...visible, visible: true, loading: false, editMode: true, record: record});
       loadExtraFunctions(record, loadFns);
+    },
+
+    getForm() {
+      return form;
     }
 
   }));

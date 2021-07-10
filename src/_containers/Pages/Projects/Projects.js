@@ -89,10 +89,12 @@ const Projects = (props) => {
       width: '10%',
       render: (_: any, record) => (
         <Space size="middle">
-          <Popconfirm placement="top" title='¿Está seguro de quitar este proyecto?'
-                      onConfirm={() => handleRemoveClick(record)} okText="Si" cancelText="No">
-            <Button type='dashed' icon={<MinusSquareOutlined/>} danger>Quitar</Button>
-          </Popconfirm>
+          <Button type='dashed' icon={<MinusSquareOutlined/>} danger>
+            <Popconfirm placement="top" title='¿Está seguro de quitar este proyecto?'
+                        onConfirm={() => handleRemoveClick(record)} okText="Si" cancelText="No">
+              Quitar
+            </Popconfirm>
+          </Button>
           <Dropdown overlay={(
             <Menu onClick={e => handleActionMenuClick(e, record)}>
               <Menu.Item key="1" icon={<EditOutlined/>}>
@@ -169,7 +171,7 @@ const Projects = (props) => {
 
   //Edit loaders
   const loadProjectMembers = (record) => {
-    membersRef.current.setTargetKeys(record.members.data);
+    membersRef.current.setTargetKeys(record.members.data, record.opened);
   }
   const loadProjectManagers = (record) => {
     managersRef.current.setTargetKeys(record.managers.data);
@@ -183,6 +185,11 @@ const Projects = (props) => {
     setState({...state, tableSelection: selectedRows});
   }
 
+  //Crud Form handler
+  const onVisibilityChange = (e) => {
+    membersRef.current?.setDisabled(e.target.value);
+  }
+
   return (
 
     <ContentPage
@@ -192,14 +199,14 @@ const Projects = (props) => {
         <Button key="2" type="dashed" icon={<PlusSquareOutlined/>} onClick={onNewProject} className='add-operation-btn'>
           Nuevo
         </Button>,
-        <Popconfirm key="1" placement="top" title='¿Está seguro de quitar estos proyectos?'
-                    onConfirm={handleBulkRemoveClick} okText="Si" cancelText="No">
-          <Button type="dashed" disabled={state.tableSelection.length === 0} danger icon={<MinusSquareOutlined/>}
-                  className='remove-operation-btn'
-          >
-            Quitar
-          </Button>
-        </Popconfirm>,
+        <Button key="1" type="dashed" disabled={state.tableSelection.length === 0} danger icon={<MinusSquareOutlined/>}
+                className='remove-operation-btn'
+        >
+          <Popconfirm placement="top" title='¿Está seguro de quitar estos proyectos?'
+                      onConfirm={handleBulkRemoveClick} okText="Si" cancelText="No">
+              Quitar
+          </Popconfirm>
+        </Button>
       ]}
     >
 
@@ -219,7 +226,7 @@ const Projects = (props) => {
         </Form.Item>
         <Form.Item label="Visibilidad" name="opened"
                    rules={[{required: true, message: 'El tipo de visibilidad del proyecto es requerido'}]}>
-          <Radio.Group>
+          <Radio.Group value={true} onChange={onVisibilityChange}>
             <Radio.Button value={true}>Abierto</Radio.Button>
             <Radio.Button value={false}>Asignado</Radio.Button>
           </Radio.Group>

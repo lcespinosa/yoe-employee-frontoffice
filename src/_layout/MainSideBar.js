@@ -34,8 +34,8 @@ class MainSideBar extends React.Component {
         >
           <SubMenu key="sub1" icon={<DeploymentUnitOutlined />} title="Management">
             <Menu.Item key="1"><Link to='/front/projects'>Projects</Link></Menu.Item>
-            <Menu.Item key="2">Tasks</Menu.Item>
-            <Menu.Item key="3">Manual entries</Menu.Item>
+            <Menu.Item key="2"><Link to='/front/tasks'>Tasks</Link></Menu.Item>
+            <Menu.Item key="3"><Link to='/front/manual_entries'>Manual entries</Link></Menu.Item>
           </SubMenu>
           <SubMenu key="sub2" icon={<ApartmentOutlined />} title="Organization">
             <Menu.Item key="4">Shift</Menu.Item>
