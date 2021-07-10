@@ -19,11 +19,18 @@ const { TabPane } = Tabs;
 
 const Projects = (props) => {
 
+  const [state, setState] = useState({
+    tab: 1,
+    tableSelection: []
+  });
+
   //References & methods
   const crudRef = useRef();
   const membersRef = useRef();
   const managersRef = useRef();
   const tablePendingRef = useRef();
+  const tableCompleteRef = useRef();
+  const tableCancelRef = useRef();
   const onNewProject = () => {
     crudRef.current.open(crudOpenCallback);
   }
@@ -43,79 +50,110 @@ const Projects = (props) => {
   const onCrudOkResult = (editMode, data) => {
     if (editMode) {
       tablePendingRef.current.handleUpdate(data);
-    }
-    else {
+    } else {
       tablePendingRef.current.handleAdd(data);
     }
   }
 
   //Column definition
-  const tableColumns = [
+  const commonTableColumns = [
 
     {
-      title: 'Name',
+      title: 'Nombre',
       dataIndex: 'title',
       sorter: true,
       width: '20%',
     },
     {
-      title: 'Description',
+      title: 'Descripción',
       dataIndex: 'description',
     },
     {
-      title: 'Visibility',
+      title: 'Visibilidad',
       dataIndex: 'opened',
-      render: opened => { return opened ? (<Tag color='green'>Público</Tag>) : (<Tag color='gold'>Asignado</Tag>); },
+      render: opened => {
+        return opened ? (<Tag color='green'>Público</Tag>) : (<Tag color='gold'>Asignado</Tag>);
+      },
       width: '10%',
     },
     {
-      title: 'Notes',
+      title: 'Notas',
       dataIndex: 'notes',
     },
+
+  ];
+  const pendingTableColumns = [...commonTableColumns,
     {
-      title: 'Actions',
+      title: 'Acciones',
       key: 'action',
       width: '10%',
       render: (_: any, record) => (
         <Space size="middle">
-          <Popconfirm placement="top" title='¿Está seguro de quitar este proyecto?' onConfirm={() => handleRemoveClick(record)} okText="Si" cancelText="No">
-            <Button type='dashed' icon={<MinusSquareOutlined />} danger>Quitar</Button>
+          <Popconfirm placement="top" title='¿Está seguro de quitar este proyecto?'
+                      onConfirm={() => handleRemoveClick(record)} okText="Si" cancelText="No">
+            <Button type='dashed' icon={<MinusSquareOutlined/>} danger>Quitar</Button>
           </Popconfirm>
           <Dropdown overlay={(
             <Menu onClick={e => handleActionMenuClick(e, record)}>
-              <Menu.Item key="1" icon={<EditOutlined />}>
+              <Menu.Item key="1" icon={<EditOutlined/>}>
                 Modificar
               </Menu.Item>
-              <Menu.Item key="2" icon={<OrderedListOutlined />}>
+              <Menu.Item key="2" icon={<OrderedListOutlined/>}>
                 Gestionar tareas
               </Menu.Item>
-              <Menu.Item key="3" icon={<CheckOutlined />}>
-                <Popconfirm placement="top" title='¿Está seguro de completar este proyecto?' onConfirm={() => handleRemoveClick(record)} okText="Si" cancelText="No">
-                    Completar
+              <Menu.Item key="3" icon={<CheckOutlined/>}>
+                <Popconfirm placement="top" title='¿Está seguro de completar este proyecto?'
+                            onConfirm={() => handleCompleteClick(record)} okText="Si" cancelText="No">
+                  Completar
                 </Popconfirm>
               </Menu.Item>
-              <Menu.Item key="4" icon={<StopOutlined />}>
-                <Popconfirm placement="top" title='¿Está seguro de cancelar este proyecto?' onConfirm={() => handleRemoveClick(record)} okText="Si" cancelText="No">
-                    Cancelar
+              <Menu.Item key="4" icon={<StopOutlined/>}>
+                <Popconfirm placement="top" title='¿Está seguro de cancelar este proyecto?'
+                            onConfirm={() => handleCancelClick(record)} okText="Si" cancelText="No">
+                  Cancelar
                 </Popconfirm>
               </Menu.Item>
             </Menu>
           )}>
             <Button>
-              Más <DownOutlined />
+              Más <DownOutlined/>
             </Button>
           </Dropdown>
         </Space>
       ),
     },
-
   ];
 
   //Action Handlers
   const handleRemoveClick = (record) => {
     axios.delete(`/operation/projects/${record.id}`)
       .then(_ => {
-        tablePendingRef.current.handleDelete(record.id);
+        tablePendingRef.current.handleRefresh();
+      });
+  }
+  const handleCompleteClick = (record) => {
+    axios.post(`/operation/projects/${record.id}/complete`)
+      .then(_ => {
+        tablePendingRef.current.handleRefresh();
+        tableCompleteRef.current?.handleRefresh();
+      });
+  }
+  const handleCancelClick = (record) => {
+    axios.post(`/operation/projects/${record.id}/cancel`)
+      .then(_ => {
+        tablePendingRef.current.handleRefresh();
+        tableCancelRef.current?.handleRefresh();
+      });
+  }
+  const handleBulkRemoveClick = () => {
+    const params = {
+      params: {
+        records: state.tableSelection
+      }
+    }
+    axios.delete(`/operation/projects/bulk`, params)
+      .then(_ => {
+        tablePendingRef.current.handleDelete();
       });
   }
 
@@ -141,35 +179,46 @@ const Projects = (props) => {
     console.log(tab);
   }
 
+  const onChangeTableSelection = (selectedRows) => {
+    setState({...state, tableSelection: selectedRows});
+  }
+
   return (
 
     <ContentPage
       title='Proyectos'
       subTitle='Se muestra el listado de proyectos'
       operations={[
-        <Button key="2" type="dashed" icon={<PlusSquareOutlined />} onClick={onNewProject} className='add-operation-btn'>
+        <Button key="2" type="dashed" icon={<PlusSquareOutlined/>} onClick={onNewProject} className='add-operation-btn'>
           Nuevo
         </Button>,
-        <Button key="1" type="dashed" danger icon={<MinusSquareOutlined />} className='remove-operation-btn'>
-          Quitar
-        </Button>,
+        <Popconfirm key="1" placement="top" title='¿Está seguro de quitar estos proyectos?'
+                    onConfirm={handleBulkRemoveClick} okText="Si" cancelText="No">
+          <Button type="dashed" disabled={state.tableSelection.length === 0} danger icon={<MinusSquareOutlined/>}
+                  className='remove-operation-btn'
+          >
+            Quitar
+          </Button>
+        </Popconfirm>,
       ]}
     >
 
       <CrudForm width={1000}
-        title='Nuevo proyecto'
-        editTitle='Modificar proyecto'
-        ref={crudRef}
-        onOk={onCrudOkResult}
-        afterSubmit={onCrudAfterSubmit}
+                title='Nuevo proyecto'
+                editTitle='Modificar proyecto'
+                ref={crudRef}
+                onOk={onCrudOkResult}
+                afterSubmit={onCrudAfterSubmit}
       >
-        <Form.Item label="Nombre" name='title' rules={[{ required: true, message: 'El nombre del proyecto es requerido' }]}>
-          <Input placeholder="Escriba el nombre del proyecto" />
+        <Form.Item label="Nombre" name='title'
+                   rules={[{required: true, message: 'El nombre del proyecto es requerido'}]}>
+          <Input placeholder="Escriba el nombre del proyecto"/>
         </Form.Item>
         <Form.Item label="Descripción" name='description'>
-          <Input.TextArea placeholder="Escriba la descripción del proyecto" />
+          <Input.TextArea placeholder="Escriba la descripción del proyecto"/>
         </Form.Item>
-        <Form.Item label="Visibilidad" name="opened" rules={[{ required: true, message: 'El tipo de visibilidad del proyecto es requerido' }]}>
+        <Form.Item label="Visibilidad" name="opened"
+                   rules={[{required: true, message: 'El tipo de visibilidad del proyecto es requerido'}]}>
           <Radio.Group>
             <Radio.Button value={true}>Abierto</Radio.Button>
             <Radio.Button value={false}>Asignado</Radio.Button>
@@ -180,36 +229,36 @@ const Projects = (props) => {
 
           <Col span={12}>
             <Form.Item label="Encargados" name='managers'>
-              <MembersSelector ref={managersRef} displayName='name' ajax='/organization/users' />
+              <MembersSelector ref={managersRef} displayName='name' ajax='/organization/users'/>
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item label="Miembros" name='members'>
-              <MembersSelector ref={membersRef} displayName='name' ajax='/organization/users' />
+              <MembersSelector ref={membersRef} displayName='name' ajax='/organization/users'/>
             </Form.Item>
           </Col>
 
         </Row>
         <Form.Item label="Notas" name='notes'>
-          <Input.TextArea placeholder="Escriba las notas del proyecto" />
+          <Input.TextArea placeholder="Escriba las notas del proyecto"/>
         </Form.Item>
       </CrudForm>
 
-      <Tabs defaultActiveKey="1" onChange={onChangeTab}>
+      <Tabs defaultActiveKey={state.tab} onChange={onChangeTab}>
         <TabPane tab="Pendiente" key="1">
-          <Datatable ref={tablePendingRef} columns={tableColumns} ajax='operation/projects' />
+          <Datatable ref={tablePendingRef} columns={pendingTableColumns} ajax='operation/projects?type=pending' hasSelection={true}
+                     onChangeSelection={onChangeTableSelection}/>
         </TabPane>
         <TabPane tab="Completado" key="2">
-          Content of Tab Pane 2
+          <Datatable ref={tableCompleteRef} columns={commonTableColumns} ajax='operation/projects?type=completed'/>
         </TabPane>
         <TabPane tab="Cancelado" key="3">
-          Content of Tab Pane 3
+          <Datatable ref={tableCancelRef} columns={commonTableColumns} ajax='operation/projects?type=canceled'/>
         </TabPane>
       </Tabs>
 
     </ContentPage>
   )
-
 
 }
 

@@ -10,23 +10,21 @@ export const Datatable = forwardRef((props, ref) => {
   const [pagination, setPagination] = useState({
     pagination: {
       current: 1,
-      pageSize: 10,
+      pageSize: 15,
     },
   });
 
   useEffect(() => {
-    fetch({pagination});
+    fetch(pagination);
   }, []);
 
   useImperativeHandle(ref, () => ({
 
-    handleDelete(key) {
-      const dataSource = [...tableData.data];
-      setTableData({ data: dataSource.filter(item => item.id !== key) });
+    handleRefresh() {
+      fetch(pagination);
     },
 
     handleAdd(row) {
-      console.log(row);
       const newData = {
         key: row.id,
         ...row
@@ -36,6 +34,9 @@ export const Datatable = forwardRef((props, ref) => {
       setTableData({
         data: [...dataSource, newData],
       });
+      let paginator = {...pagination};
+      paginator.pagination.total = dataSource.length + 1;
+      setPagination(paginator);
     },
 
     handleUpdate(row) {
@@ -52,6 +53,7 @@ export const Datatable = forwardRef((props, ref) => {
 
   const onSelectChange = selectedRows => {
     setSelectedRowKeys(selectedRows);
+    props.onChangeSelection(selectedRows);
   };
 
   const rowSelection = {
@@ -59,11 +61,11 @@ export const Datatable = forwardRef((props, ref) => {
     onChange: onSelectChange,
   };
 
-  const handleTableChange = (pagnation, filters, sorter) => {
+  const handleTableChange = (pagination, filters, sorter) => {
     const params = {
       sortField: sorter.field,
       sortOrder: sorter.order,
-      pagination: pagnation,
+      pagination: pagination,
       ...filters,
     };
     fetch(params);
@@ -73,10 +75,18 @@ export const Datatable = forwardRef((props, ref) => {
     setLoading({loading: true});
     axios.get(`/${props.ajax}`, {params: params})
       .then(({data}) => {
-        console.log(data);
         setTableData({data: data.data});
         setLoading({loading: false});
-        onSelectChange([]);
+        setPagination({
+          pagination: {
+            current: data.meta.pagination.current_page,
+            pageSize: data.meta.pagination.per_page,
+            total: data.meta.pagination.total
+          },
+        });
+        if (props.hasSelection) {
+          onSelectChange([]);
+        }
       });
   }
 
@@ -85,7 +95,7 @@ export const Datatable = forwardRef((props, ref) => {
     <Table
       columns={props.columns}
       rowKey={record => record.id}
-      rowSelection={rowSelection}
+      rowSelection={props.hasSelection ? rowSelection : null}
       dataSource={tableData.data}
       pagination={pagination.pagination}
       loading={loading.loading}
