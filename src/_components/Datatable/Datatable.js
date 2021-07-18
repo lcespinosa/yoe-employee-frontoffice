@@ -72,6 +72,7 @@ export const Datatable = forwardRef((props, ref) => {
   };
 
   const fetch = (params = {}) => {
+    console.log(`Refresh table: ${props.ajax}`);
     if (props.ajax.length > 0) {
       setLoading({loading: true});
       axios.get(`/${props.ajax}`, {params: params})

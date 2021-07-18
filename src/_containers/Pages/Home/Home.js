@@ -7,6 +7,7 @@ import {PrivateRoute} from "../../../_components";
 
 import Projects from "../Projects/Projects";
 import Tasks from "../Tasks/Tasks";
+import ManualEntries from "../ManualEntries/ManualEntries";
 import {Redirect} from "react-router-dom";
 
 const {Content} = Layout;
@@ -34,8 +35,9 @@ const Home = (props) => {
           >
 
             <Switch>
+              <PrivateRoute path={path + '/projects/:project/tasks/:task/manual_entries'} component={ManualEntries} />
+              <PrivateRoute path={path + '/projects/:project/tasks'} component={Tasks} />
               <PrivateRoute path={path + '/projects'} component={Projects} />
-              <PrivateRoute path={path + '/tasks'} component={Tasks} />
               <Redirect to={path + '/projects'} />
             </Switch>
           </Content>

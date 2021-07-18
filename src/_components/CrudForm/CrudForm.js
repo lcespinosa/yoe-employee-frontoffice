@@ -43,14 +43,9 @@ export const CrudForm = forwardRef(( props, ref ) => {
       ...values,
       ...props.afterSubmit(values)
     }
-    let url = '/operation/projects';
-    let method = 'post';
-    if (visible.editMode) {
-      url += `/${visible.record.id}`;
-      method = 'put';
-    }
+    const { url, method } = props.action(visible.editMode, visible.record, extraValues);
 
-      axios[method](url, extraValues)
+    axios[method](url, extraValues)
       .then(({data}) => {
         setVisible({...visible, visible: false});
         message.success({ content: 'Operación realizada con éxito.', key: 'message_operation' });

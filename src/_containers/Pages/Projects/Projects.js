@@ -14,6 +14,7 @@ import {
 import {useCallback, useRef, useState} from "react";
 import {MembersSelector} from "../../../_components/MembersSelector/MembersSelector";
 import axios from '../../../global_axios';
+import {history} from '../../../_helpers'
 
 const { TabPane } = Tabs;
 
@@ -53,6 +54,18 @@ const Projects = (props) => {
     } else {
       tablePendingRef.current.handleAdd(data);
     }
+  }
+  const getCrudAction = (editMode, record, values) => {
+    let url = '/operation/projects';
+    let method = 'post';
+    if (editMode) {
+      url += `/${record.id}`;
+      method = 'put';
+    }
+    return {
+      url,
+      method,
+    };
   }
 
   //Column definition
@@ -155,7 +168,7 @@ const Projects = (props) => {
     }
     axios.delete(`/operation/projects/bulk`, params)
       .then(_ => {
-        tablePendingRef.current.handleDelete();
+        tablePendingRef.current.handleRefresh();
       });
   }
 
@@ -165,6 +178,7 @@ const Projects = (props) => {
         crudRef.current.edit(record, loadProjectMembers, loadProjectManagers);
         break;
       case '2': //Tasks
+        history.push(props.match.path + `/${record.id}/tasks`);
         break;
     }
   }
@@ -216,6 +230,7 @@ const Projects = (props) => {
                 ref={crudRef}
                 onOk={onCrudOkResult}
                 afterSubmit={onCrudAfterSubmit}
+                action={getCrudAction}
       >
         <Form.Item label="Nombre" name='title'
                    rules={[{required: true, message: 'El nombre del proyecto es requerido'}]}>
@@ -236,12 +251,12 @@ const Projects = (props) => {
 
           <Col span={12}>
             <Form.Item label="Encargados" name='managers'>
-              <MembersSelector ref={managersRef} displayName='name' ajax='/organization/users'/>
+              <MembersSelector ref={managersRef} displayName='name' ajax='/organization/users/managers'/>
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item label="Miembros" name='members'>
-              <MembersSelector ref={membersRef} displayName='name' ajax='/organization/users'/>
+              <MembersSelector ref={membersRef} displayName='name' ajax='/organization/users/employees'/>
             </Form.Item>
           </Col>
 

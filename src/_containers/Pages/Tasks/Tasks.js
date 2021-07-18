@@ -20,6 +20,7 @@ import { Datatable, CrudForm } from '../../../_components';
 
 import {useCallback, useEffect, useRef, useState} from "react";
 import {MembersSelector} from "../../../_components/MembersSelector/MembersSelector";
+import { history } from '../../../_helpers';
 import axios from '../../../global_axios';
 import {
   CheckOutlined,
@@ -41,8 +42,13 @@ const Tasks = (props) => {
   const [state, setState] = useState({
     projects: [],
     selectedProject: null,
+    selectedProjectId: null,
+  });
+  const [uiState, setUIState] = useState({
     tab: 1,
     tableSelection: [],
+  });
+  const [estimationState, setEstimationState] = useState({
     calculatedEstimation: '',
   });
 
@@ -77,6 +83,20 @@ const Tasks = (props) => {
     } else {
       tablePendingRef.current.handleAdd(data);
     }
+  }
+  const getCrudAction = (editMode, record, values) => {
+    const project = props.match.params.project;
+    let url = `/operation/projects/${project}/tasks`;
+    console.log('Crud action ' + url);
+    let method = 'post';
+    if (editMode) {
+      url += `/${record.id}`;
+      method = 'put';
+    }
+    return {
+      url,
+      method,
+    };
   }
 
   //Column definition
@@ -135,7 +155,7 @@ const Tasks = (props) => {
                 Modificar
               </Menu.Item>
               <Menu.Item key="2" icon={<OrderedListOutlined/>}>
-                Gestionar tareas
+                Gestionar entradas
               </Menu.Item>
               <Menu.Item key="3" icon={<CheckOutlined/>}>
                 <Popconfirm placement="top" title='¿Está seguro de completar esta tarea?'
@@ -162,20 +182,23 @@ const Tasks = (props) => {
 
   //Action Handlers
   const handleRemoveClick = (record) => {
-    axios.delete(`/operation/tasks/${record.id}`)
+    const project = props.match.params.project;
+    axios.delete(`/operation/projects/${project}/tasks/${record.id}`)
       .then(_ => {
         tablePendingRef.current.handleRefresh();
       });
   }
   const handleCompleteClick = (record) => {
-    axios.post(`/operation/tasks/${record.id}/complete`)
+    const project = props.match.params.project;
+    axios.post(`/operation/projects/${project}/tasks/${record.id}/complete`)
       .then(_ => {
         tablePendingRef.current.handleRefresh();
         tableCompleteRef.current?.handleRefresh();
       });
   }
   const handleCancelClick = (record) => {
-    axios.post(`/operation/tasks/${record.id}/cancel`)
+    const project = props.match.params.project;
+    axios.post(`/operation/projects/${project}/tasks/${record.id}/cancel`)
       .then(_ => {
         tablePendingRef.current.handleRefresh();
         tableCancelRef.current?.handleRefresh();
@@ -184,12 +207,13 @@ const Tasks = (props) => {
   const handleBulkRemoveClick = () => {
     const params = {
       params: {
-        records: state.tableSelection
+        records: uiState.tableSelection
       }
     }
-    axios.delete(`/operation/tasks/bulk`, params)
+    const project = props.match.params.project;
+    axios.delete(`/operation/projects/${project}/tasks/bulk`, params)
       .then(_ => {
-        tablePendingRef.current.handleDelete();
+        tablePendingRef.current.handleRefresh();
       });
   }
 
@@ -198,14 +222,15 @@ const Tasks = (props) => {
       case '1': //Edit
         crudRef.current.edit(record, loadTaskMembers, loadTaskManagers);
         break;
-      case '2': //Tasks
+      case '2': //Manual Entries
+        history.push(props.match.url + `/${record.id}/entries`);
         break;
     }
   }
 
   //Edit loaders
   const loadTaskMembers = (record) => {
-    membersRef.current.setTargetKeys(record.members.data);
+    membersRef.current.setTargetKeys(record.members.data, record.opened);
   }
   const loadTaskManagers = (record) => {
     managersRef.current.setTargetKeys(record.managers.data);
@@ -216,7 +241,7 @@ const Tasks = (props) => {
   }
 
   const onChangeTableSelection = (selectedRows) => {
-    setState({...state, tableSelection: selectedRows});
+    setUIState({...uiState, tableSelection: selectedRows});
   }
 
   //Estimation calc
@@ -253,7 +278,7 @@ const Tasks = (props) => {
       //To string
       strTime += ')/Hombre';
     }
-    setState({...state, calculatedEstimation: strTime});
+    setEstimationState({...estimationState, calculatedEstimation: strTime});
   }
 
   //Crud Form handler
@@ -265,31 +290,50 @@ const Tasks = (props) => {
     setTimeout(() => {
       onEstimatedHoursChange();
     }, 100);
-  }, [])
+  }, []);
 
   //Parent project selection
   useEffect(() => {
     loadProjectsSelect();
   }, []);
 
-  const loadProjectsSelect = () => {
-    axios.get('operation/projects')
+  const loadProjectsSelect = useCallback(() => {
+    axios.get('operation/projects?type=pending')
       .then(({data}) => {
         const projects = data.data;
-        setState({...state, projects: projects})
-      });
-  }
+        let urlProject = parseInt(props.match.params.project);
+        if (isNaN(urlProject)) {
+          urlProject = projects[0]?.id;
+          updateCurrentPath(urlProject);
+        }
+        const index = getSelectedProjectIndex(urlProject, projects);
+        const selectedProject = projects[index];
 
+        setState({...state, projects: projects, selectedProjectId: urlProject, selectedProject});
+        refreshTable();
+      });
+  }, []);
+  const getSelectedProjectIndex = (id, projects = null) => {
+    projects = projects || state.projects;
+    return projects.findIndex((item) => item.id === id);
+  }
   const onSelectProject = (value) => {
-    const projectIndex = state.projects.findIndex((item) => item.id === value);
+    const projectIndex = getSelectedProjectIndex(value);
     setState({
       ...state,
       selectedProject: {
         ...state.projects[projectIndex]
-      }
+      },
+      selectedProjectId: value
     });
     projectRef.current.blur();
     refreshTable();
+    updateCurrentPath(value);
+  }
+  const updateCurrentPath = (value) => {
+    let path = props.match.path;
+    path = path.replace(':project', value);
+    history.push(path);
   }
 
   const refreshTable = useCallback(() => {
@@ -297,23 +341,23 @@ const Tasks = (props) => {
       tablePendingRef.current?.handleRefresh();
       tableCompleteRef.current?.handleRefresh();
       tableCancelRef.current?.handleRefresh();
-    }, 100)
+    }, 200)
   }, []);
 
   const projectVisibilityDescription = () => {
     let visibility = '';
-    if (state.selectedProject !== null) {
+    if (state.selectedProject !== undefined) {
       visibility = state.selectedProject?.opened ? (<Tag color='green'>Público</Tag>) : (
         <Tag color='gold'>Asignado</Tag>);
     }
     return visibility;
   }
   const getProjectUrlParam = (type) => {
-    const id = state.selectedProject?.id;
+    const id = state.selectedProject?.id || props.match.params.project;
     if (id === undefined || type === undefined) {
       return '';
     }
-    return `operation/tasks?type=${type}&project=${id}`;
+    return `operation/projects/${id}/tasks?type=${type}`;
   }
 
   return (
@@ -323,11 +367,11 @@ const Tasks = (props) => {
       subTitle='Se muestra el listado de todas las tareas'
       operations={[
         <Button key="2" type="dashed" icon={<PlusSquareOutlined/>} onClick={onNewTask} className='add-operation-btn'
-                disabled={state.selectedProject === null}
+                disabled={state.selectedProjectId === undefined}
         >
           Nueva
         </Button>,
-        <Button key="1" type="dashed" disabled={state.tableSelection.length === 0} danger icon={<MinusSquareOutlined/>}
+        <Button key="1" type="dashed" disabled={uiState.tableSelection.length === 0} danger icon={<MinusSquareOutlined/>}
                 className='remove-operation-btn'
         >
           <Popconfirm placement="top" title='¿Está seguro de quitar estas tareas?'
@@ -345,8 +389,9 @@ const Tasks = (props) => {
               size='small'
               showSearch
               style={{width: 200}}
-              placeholder="Search to Select"
+              placeholder="Buscar y seleccionar"
               optionFilterProp="children"
+              value={state.selectedProjectId}
               filterOption={(input, option) =>
                 option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
               }
@@ -371,6 +416,7 @@ const Tasks = (props) => {
                 ref={crudRef}
                 onOk={onCrudOkResult}
                 afterSubmit={onCrudAfterSubmit}
+                action={getCrudAction}
       >
         <Form.Item label="Nombre" name='title'
                    rules={[{required: true, message: 'El nombre de la tarea es requerido'}]}>
@@ -392,12 +438,12 @@ const Tasks = (props) => {
 
           <Col span={12}>
             <Form.Item label="Encargados" name='managers'>
-              <MembersSelector ref={managersRef} displayName='name' ajax='/organization/users'/>
+              <MembersSelector ref={managersRef} displayName='name' ajax='/organization/users/managers'/>
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item label="Miembros" name='members'>
-              <MembersSelector ref={membersRef} displayName='name' ajax='/organization/users' onChangeTargetKeys={onEstimatedHoursChange}/>
+              <MembersSelector ref={membersRef} displayName='name' ajax='/organization/users/employees' onChangeTargetKeys={onEstimatedHoursChange}/>
             </Form.Item>
           </Col>
 
@@ -411,7 +457,7 @@ const Tasks = (props) => {
 
           <Col span={21}>
             <div  className='estimated-hours-info'>
-              <Text> {state.calculatedEstimation} </Text>
+              <Text> {estimationState.calculatedEstimation} </Text>
               <Text style={{marginLeft: '15px'}}><ExclamationCircleOutlined /> Escriba un valor estimado de horas para esta tarea </Text>
             </div>
           </Col>
@@ -421,7 +467,7 @@ const Tasks = (props) => {
         </Form.Item>
       </CrudForm>
 
-      <Tabs defaultActiveKey={state.tab} onChange={onChangeTab}>
+      <Tabs defaultActiveKey={uiState.tab} onChange={onChangeTab}>
         <TabPane tab="Pendiente" key="1">
           <Datatable ref={tablePendingRef} columns={pendingTableColumns}
                      ajax={getProjectUrlParam('pending')} hasSelection={true}

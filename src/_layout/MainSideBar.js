@@ -6,6 +6,8 @@ import {
   DeploymentUnitOutlined
 } from "@ant-design/icons";
 import {Link} from "react-router-dom";
+import {history} from "../_helpers";
+import {alertActions} from "../_actions";
 
 const { Sider } = Layout;
 const { SubMenu } = Menu;
@@ -13,11 +15,52 @@ const { SubMenu } = Menu;
 class MainSideBar extends React.Component {
   state = {
     collapsed: false,
+    activeLink: ['1'],
+    openLink: ['sub1'],
+  }
+
+  constructor(props) {
+    super(props);
+
+    this.unlisten = history.listen((location, action) => {
+      // set current active
+      this.updateCurrentActiveMenu(location);
+    });
+  }
+
+  componentDidMount() {
+    this.updateCurrentActiveMenu(history.location);
+  }
+
+  componentWillUnmount() {
+    this.unlisten();
+  }
+
+  updateCurrentActiveMenu = location => {
+    let uri = location.pathname;
+    const {link, menu} = this.resolveActiveMenu(uri);
+    this.setState({ ...this.state, activeLink: link, openLink: menu});
+  }
+
+  resolveActiveMenu = uri => {
+    if (/^\/front\/projects$/.test(uri)) {
+      return {link: ['1'], menu: ['sub1']};
+    }
+    if (/^\/front\/projects\/(.*|all)\/tasks$/.test(uri)) {
+      return {link: ['2'], menu: ['sub1']};
+    }
+    if (/^\/front\/projects\/(.*|all)\/tasks\/(.*|all)\/manual_entries$/.test(uri)) {
+      return {link: ['3'], menu: ['sub1']};
+    }
+    if (/^\/front\/projects\/(.*|all)\/tasks\/(.*|all)\/entries$/.test(uri)) {
+      return {link: ['4'], menu: ['sub1']};
+    }
+    return {link: ['1'], menu: ['sub1']}; //by default
   }
 
   onCollapse = collapsed => {
     console.log(collapsed);
-    this.setState({ collapsed });
+    this.setState({ ...this.state, collapsed });
   }
 
   render() {
@@ -28,24 +71,26 @@ class MainSideBar extends React.Component {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={['1']}
-          defaultOpenKeys={['sub1']}
+          selectedKeys={this.state.activeLink}
+          openKeys={this.state.openLink}
           style={{ height: '100%', borderRight: 0 }}
+
         >
-          <SubMenu key="sub1" icon={<DeploymentUnitOutlined />} title="Management">
-            <Menu.Item key="1"><Link to='/front/projects'>Projects</Link></Menu.Item>
-            <Menu.Item key="2"><Link to='/front/tasks'>Tasks</Link></Menu.Item>
-            <Menu.Item key="3"><Link to='/front/manual_entries'>Manual entries</Link></Menu.Item>
+          <SubMenu key="sub1" icon={<DeploymentUnitOutlined />} title="Administración">
+            <Menu.Item key="1"><Link to='/front/projects'>Proyectos</Link></Menu.Item>
+            <Menu.Item key="2"><Link to='/front/projects/all/tasks'>Tareas</Link></Menu.Item>
+            <Menu.Item key="3"><Link to='/front/projects/all/tasks/all/manual_entries'>Entradas manuales</Link></Menu.Item>
+            <Menu.Item key="4"><Link to='/front/projects/all/tasks/all/entries'>Entradas de usuario</Link></Menu.Item>
           </SubMenu>
           <SubMenu key="sub2" icon={<ApartmentOutlined />} title="Organization">
-            <Menu.Item key="4">Shift</Menu.Item>
-            <Menu.Item key="5">Groups</Menu.Item>
-            <Menu.Item key="6">Employees</Menu.Item>
+            <Menu.Item key="5">Shift</Menu.Item>
+            <Menu.Item key="6">Groups</Menu.Item>
+            <Menu.Item key="7">Employees</Menu.Item>
           </SubMenu>
           <SubMenu key="sub3" icon={<SettingOutlined />} title="Configuration">
-            <Menu.Item key="7">Roles</Menu.Item>
-            <Menu.Item key="8">Users</Menu.Item>
-            <Menu.Item key="9">Settings</Menu.Item>
+            <Menu.Item key="8">Roles</Menu.Item>
+            <Menu.Item key="9">Users</Menu.Item>
+            <Menu.Item key="10">Settings</Menu.Item>
           </SubMenu>
         </Menu>
       </Sider>
