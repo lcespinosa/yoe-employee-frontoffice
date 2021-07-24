@@ -30,14 +30,14 @@ import {
   PlusSquareOutlined,
   StopOutlined,
 } from "@ant-design/icons";
-import './ManualEntries.css';
+import './Entries.css';
 import moment from "moment";
 
 const { TabPane } = Tabs;
 const { Option } = Select;
 const { Text } = Typography;
 
-const ManualEntries = (props) => {
+const Entries = (props) => {
 
   const [state, setState] = useState({
     projects: [],
@@ -51,69 +51,11 @@ const ManualEntries = (props) => {
     tab: 1,
     tableSelection: [],
   });
-  const [employeesStatus, setEmployeesStatus] = useState({
-    employees: [],
-    selectedEmployee: null
-  });
 
   //References & methods
   const projectRef = useRef();
   const taskRef = useRef();
-  const crudRef = useRef();
-  const employeeRef = useRef();
   const tablePendingRef = useRef();
-  const tableCompleteRef = useRef();
-  const tableCancelRef = useRef();
-
-  const onNewEntry = () => {
-    crudRef.current.open(crudOpenCallback);
-  }
-  const crudOpenCallback = useCallback(() => {
-    setTimeout(() => {
-      loadEmployees();
-    }, 100);
-  });
-  const onCrudAfterSubmit = (values) => {
-    console.log(values);
-    return {
-      task_id: state.selectedProjectTaskId,
-      record_date: values.record_date.format('Y-MM-DD HH:mm:ss'),
-      start_time: values.start_time.format('Y-MM-DD HH:mm:ss'),
-      end_time: values.end_time.format('Y-MM-DD HH:mm:ss'),
-    };
-  }
-  const onCrudOkResult = (editMode, data) => {
-    if (editMode) {
-      tablePendingRef.current.handleUpdate(data);
-    } else {
-      tablePendingRef.current.handleAdd(data);
-    }
-  }
-  const getCrudAction = (editMode, record, values) => {
-    const project = props.match.params.project;
-    const task = props.match.params.task;
-    let url = `/operation/projects/${project}/tasks/${task}/entries`;
-    let method = 'post';
-    if (editMode) {
-      url += `/${record.id}`;
-      method = 'put';
-    }
-    return {
-      url,
-      method,
-    };
-  }
-  const loadEmployees = (record = null) => {
-    axios.get(`/organization/users/employees`)
-      .then(({data}) => {
-        let users = [];
-        data.data.map(item => users.push({
-          key: item.id,
-          ...item
-        }));
-        setEmployeesStatus({...employeesStatus, employees: users});
-      });
-  }
 
   //Column definition
   const commonTableColumns = [
@@ -149,11 +91,6 @@ const ManualEntries = (props) => {
       },
     },
     {
-      title: 'Notas',
-      dataIndex: 'notes',
-      width: '30%',
-    },
-    {
       title: 'Total de horas',
       dataIndex: 'total_time',
       width: '12%',
@@ -177,31 +114,6 @@ const ManualEntries = (props) => {
               Quitar
             </Popconfirm>
           </Button>
-          <Dropdown overlay={(
-            <Menu onClick={e => handleActionMenuClick(e, record)}>
-              <Menu.Item key="1" icon={<EditOutlined/>}>
-                Modificar
-              </Menu.Item>
-
-              <Menu.Item key="3" icon={<CheckOutlined/>}>
-                <Popconfirm placement="top" title='¿Está seguro de aprobar esta entrada?'
-                            onConfirm={() => handleCompleteClick(record)} okText="Si" cancelText="No">
-                  Aprobar
-                </Popconfirm>
-              </Menu.Item>
-              <Menu.Item key="4" icon={<StopOutlined/>}>
-                <Popconfirm placement="top" title='¿Está seguro de rechazar esta entrada?'
-                            onConfirm={() => handleCancelClick(record)} okText="Si" cancelText="No">
-                  Rechazar
-                </Popconfirm>
-              </Menu.Item>
-
-            </Menu>
-          )}>
-            <Button>
-              Más <DownOutlined/>
-            </Button>
-          </Dropdown>
         </Space>
       ),
     },
@@ -216,24 +128,6 @@ const ManualEntries = (props) => {
         tablePendingRef.current.handleRefresh();
       });
   }
-  const handleCompleteClick = (record) => {
-    const project = props.match.params.project;
-    const task = props.match.params.task;
-    axios.post(`/operation/projects/${project}/tasks/${task}/entries/${record.id}/approve`)
-      .then(_ => {
-        tablePendingRef.current.handleRefresh();
-        tableCompleteRef.current?.handleRefresh();
-      });
-  }
-  const handleCancelClick = (record) => {
-    const project = props.match.params.project;
-    const task = props.match.params.task;
-    axios.post(`/operation/projects/${project}/tasks/${task}/entries/${record.id}/reject`)
-      .then(_ => {
-        tablePendingRef.current.handleRefresh();
-        tableCancelRef.current?.handleRefresh();
-      });
-  }
   const handleBulkRemoveClick = () => {
     const params = {
       params: {
@@ -246,24 +140,6 @@ const ManualEntries = (props) => {
       .then(_ => {
         tablePendingRef.current.handleRefresh();
       });
-  }
-
-  const handleActionMenuClick = (e, record) => {
-    switch (e.key) {
-      case '1': //Edit
-        console.log(record);
-        const record_date = moment(record.record_time, moment.DATE)
-        const start_time = moment(record.start_time, 'YYYY-MM-DD HH:mm')
-        const end_time = moment(record.end_time, 'YYYY-MM-DD HH:mm')
-        const user_id = record.user.id
-        record = {...record, record_date, start_time, end_time, user_id}
-        crudRef.current.edit(record, loadEmployees);
-        break;
-    }
-  }
-
-  const onChangeTab = tab => {
-    console.log(tab);
   }
 
   const onChangeTableSelection = (selectedRows) => {
@@ -294,17 +170,8 @@ const ManualEntries = (props) => {
     return projects.findIndex((item) => item.id === id);
   }
   const onSelectProject = (value) => {
-    const projectIndex = getSelectedProjectIndex(value);
-    // setState({
-    //   ...state,
-    //   selectedProject: {
-    //     ...state.projects[projectIndex]
-    //   },
-    //   selectedProjectId: value
-    // });
     loadProjectTasksSelect(state.projects, value);
     projectRef.current.blur();
-    // refreshTable();
     updateCurrentPath(value);
   }
 
@@ -374,8 +241,6 @@ const ManualEntries = (props) => {
   const refreshTable = useCallback(() => {
     setTimeout(_ => {
       tablePendingRef.current?.handleRefresh();
-      tableCompleteRef.current?.handleRefresh();
-      tableCancelRef.current?.handleRefresh();
     }, 200)
   }, []);
 
@@ -395,30 +260,25 @@ const ManualEntries = (props) => {
     }
     return visibility;
   }
-  const getProjectTaskUrlParam = (type) => {
+  const getProjectTaskUrlParam = () => {
     const projectId = state.selectedProject?.id || props.match.params.project;
     const taskId = state.selectedProjectTask?.id || props.match.params.task;
-    if (projectId === undefined || taskId === undefined || type === undefined) {
+    if (projectId === undefined || taskId === undefined) {
       return '';
     }
-    return `operation/projects/${projectId}/tasks/${taskId}/entries?type=${type}`;
+    return `operation/projects/${projectId}/tasks/${taskId}/entries?entries_only=true`;
   }
 
   return (
 
     <ContentPage
-      title='Entradas manuales'
-      subTitle='Se muestra el listado de todas las entradas manuales de empleados'
+      title='Entradas de usuario'
+      subTitle='Se muestra el listado de todas las entradas de empleados'
       operations={[
-        <Button key="2" type="dashed" icon={<PlusSquareOutlined/>} onClick={onNewEntry} className='add-operation-btn'
-                disabled={state.selectedProjectId === undefined || state.selectedProjectTaskId === undefined}
-        >
-          Nueva
-        </Button>,
         <Button key="1" type="dashed" disabled={uiState.tableSelection.length === 0} danger icon={<MinusSquareOutlined/>}
                 className='remove-operation-btn'
         >
-          <Popconfirm placement="top" title='¿Está seguro de quitar estas entradas manuales?'
+          <Popconfirm placement="top" title='¿Está seguro de quitar estas entradas?'
                       onConfirm={handleBulkRemoveClick} okText="Si" cancelText="No">
             Quitar
           </Popconfirm>
@@ -480,95 +340,13 @@ const ManualEntries = (props) => {
       </>)}
     >
 
-      <CrudForm title='Nueva entrada manual'
-                editTitle='Modificar entrada manual'
-                ref={crudRef}
-                onOk={onCrudOkResult}
-                afterSubmit={onCrudAfterSubmit}
-                action={getCrudAction}
-      >
-        <Form.Item label="Empleado" name='user_id'
-                   rules={[{required: true, message: 'El nombre del empleado es requerido'}]}>
-          <Select
-            ref={employeeRef}
-            showSearch
-            // style={{width: 200}}
-            placeholder="Buscar y seleccionar"
-            optionFilterProp="children"
-            // value={state.selectedProjectId}
-            filterOption={(input, option) =>
-              option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-            }
-            filterSort={(optionA, optionB) =>
-              optionA.children.toLowerCase().localeCompare(optionB.children.toLowerCase())
-            }
-          >
-            {employeesStatus.employees.map(item => <Option key={item.id} value={item.id}>{item.name}</Option>)}
-          </Select>
-        </Form.Item>
-        <Row  gutter={[16]}>
-          <Col span={8}>
-            <Form.Item label="Fecha" name='record_date' rules={[{required: true, message: 'La fecha es requerida'}]}>
-              <DatePicker />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item label="Comienzo" name='start_time' dependencies={['end_time']} rules={[
-              {required: true, message: 'La hora de inicio es requerida'},
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  const endValue = getFieldValue('end_time');
-                  if (!value || !endValue || endValue.isAfter(value)) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('La hora de inicio es posterior a la hora de fin.'));
-                },
-              }),
-            ]}>
-              <TimePicker use12Hours format="h:mm a" />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item label="Fin" name='end_time' dependencies={['start_time']} rules={[
-              {required: true, message: 'La hora de fin es requerida'},
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  const startValue = getFieldValue('start_time');
-                  if (!value || !startValue || startValue.isBefore(value)) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('La hora de fin es anterior a la hora de inicio.'));
-                },
-              }),
-            ]}>
-              <TimePicker use12Hours format="h:mm a" />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Form.Item label="Notas" name='notes'>
-          <Input.TextArea placeholder="Escriba las notas de la tarea"/>
-        </Form.Item>
-      </CrudForm>
-
-      <Tabs defaultActiveKey={uiState.tab} onChange={onChangeTab}>
-        <TabPane tab="Pendiente" key="1">
-          <Datatable ref={tablePendingRef} columns={pendingTableColumns}
-                     ajax={getProjectTaskUrlParam('pending')} hasSelection={true}
-                     onChangeSelection={onChangeTableSelection}/>
-        </TabPane>
-        <TabPane tab="Aprobado" key="2">
-          <Datatable ref={tableCompleteRef} columns={commonTableColumns}
-                     ajax={getProjectTaskUrlParam('approved')}/>
-        </TabPane>
-        <TabPane tab="Rechazado" key="3">
-          <Datatable ref={tableCancelRef} columns={commonTableColumns}
-                     ajax={getProjectTaskUrlParam('rejected')}/>
-        </TabPane>
-      </Tabs>
+     <Datatable ref={tablePendingRef} columns={pendingTableColumns}
+                 ajax={getProjectTaskUrlParam()} hasSelection={true}
+                 onChangeSelection={onChangeTableSelection}/>
 
     </ContentPage>
   )
 
 }
 
-export default ManualEntries;
+export default Entries;

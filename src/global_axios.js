@@ -21,7 +21,7 @@ instance.interceptors.response.use((response) => {
 }, error => {
 
   let response = error.response;
-  switch (response.status) {
+  switch (response?.status) {
     case 401: notification.error({
       placement: 'topRight',
       message: 'Error de seguridad',

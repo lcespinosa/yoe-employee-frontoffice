@@ -133,6 +133,9 @@ const Tasks = (props) => {
       title: 'Total de horas',
       dataIndex: 'total_time',
       width: '12%',
+      render: total_time => {
+        return (<Text>{Math.floor(total_time/3600)}</Text>);
+      },
     },
 
   ];
@@ -223,7 +226,7 @@ const Tasks = (props) => {
         crudRef.current.edit(record, loadTaskMembers, loadTaskManagers);
         break;
       case '2': //Manual Entries
-        history.push(props.match.url + `/${record.id}/entries`);
+        history.push(props.match.url + `/${record.id}/manual_entries`);
         break;
     }
   }
@@ -442,7 +445,7 @@ const Tasks = (props) => {
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="Miembros" name='members'>
+            <Form.Item label="Empleados" name='members'>
               <MembersSelector ref={membersRef} displayName='name' ajax='/organization/users/employees' onChangeTargetKeys={onEstimatedHoursChange}/>
             </Form.Item>
           </Col>

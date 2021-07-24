@@ -255,7 +255,7 @@ const Projects = (props) => {
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item label="Miembros" name='members'>
+            <Form.Item label="Empleados" name='members'>
               <MembersSelector ref={membersRef} displayName='name' ajax='/organization/users/employees'/>
             </Form.Item>
           </Col>

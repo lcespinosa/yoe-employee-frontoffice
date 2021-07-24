@@ -3,7 +3,8 @@ import React from "react";
 import {
   ApartmentOutlined,
   SettingOutlined,
-  DeploymentUnitOutlined
+  DeploymentUnitOutlined,
+  LockOutlined
 } from "@ant-design/icons";
 import {Link} from "react-router-dom";
 import {history} from "../_helpers";
@@ -55,6 +56,9 @@ class MainSideBar extends React.Component {
     if (/^\/front\/projects\/(.*|all)\/tasks\/(.*|all)\/entries$/.test(uri)) {
       return {link: ['4'], menu: ['sub1']};
     }
+    if (/^\/front\/employees$/.test(uri)) {
+      return {link: ['9'], menu: ['sub2']};
+    }
     return {link: ['1'], menu: ['sub1']}; //by default
   }
 
@@ -72,7 +76,7 @@ class MainSideBar extends React.Component {
           theme="dark"
           mode="inline"
           selectedKeys={this.state.activeLink}
-          openKeys={this.state.openLink}
+          defaultOpenKeys={this.state.openLink}
           style={{ height: '100%', borderRight: 0 }}
 
         >
@@ -83,14 +87,16 @@ class MainSideBar extends React.Component {
             <Menu.Item key="4"><Link to='/front/projects/all/tasks/all/entries'>Entradas de usuario</Link></Menu.Item>
           </SubMenu>
           <SubMenu key="sub2" icon={<ApartmentOutlined />} title="Organization">
-            <Menu.Item key="5">Shift</Menu.Item>
-            <Menu.Item key="6">Groups</Menu.Item>
-            <Menu.Item key="7">Employees</Menu.Item>
+            <Menu.Item key="5">Turnos</Menu.Item>
+            <Menu.Item key="6">Groupos</Menu.Item>
+            <Menu.Item key="7">Departamentos</Menu.Item>
+            <Menu.Item key="8">Encargados</Menu.Item>
+            <Menu.Item key="9"><Link to='/front/employees'>Empleados</Link></Menu.Item>
           </SubMenu>
-          <SubMenu key="sub3" icon={<SettingOutlined />} title="Configuration">
-            <Menu.Item key="8">Roles</Menu.Item>
-            <Menu.Item key="9">Users</Menu.Item>
-            <Menu.Item key="10">Settings</Menu.Item>
+          <SubMenu key="sub4" icon={<SettingOutlined />} title="Configuration">
+            <Menu.Item key="10">Horas extra</Menu.Item>
+            <Menu.Item key="11">Descansos</Menu.Item>
+            <Menu.Item key="12">Settings</Menu.Item>
           </SubMenu>
         </Menu>
       </Sider>
