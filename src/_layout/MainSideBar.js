@@ -59,6 +59,9 @@ class MainSideBar extends React.Component {
     if (/^\/front\/employees$/.test(uri)) {
       return {link: ['9'], menu: ['sub2']};
     }
+    if (/^\/front\/managers$/.test(uri)) {
+      return {link: ['8'], menu: ['sub2']};
+    }
     return {link: ['1'], menu: ['sub1']}; //by default
   }
 
@@ -90,7 +93,7 @@ class MainSideBar extends React.Component {
             <Menu.Item key="5">Turnos</Menu.Item>
             <Menu.Item key="6">Groupos</Menu.Item>
             <Menu.Item key="7">Departamentos</Menu.Item>
-            <Menu.Item key="8">Encargados</Menu.Item>
+            <Menu.Item key="8"><Link to='/front/managers'>Encargados</Link></Menu.Item>
             <Menu.Item key="9"><Link to='/front/employees'>Empleados</Link></Menu.Item>
           </SubMenu>
           <SubMenu key="sub4" icon={<SettingOutlined />} title="Configuration">

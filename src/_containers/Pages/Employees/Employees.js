@@ -203,6 +203,11 @@ const Employees = (props) => {
           <Input placeholder="Escriba el correo del empleado"/>
         </Form.Item>
 
+        <Form.Item label="Teléfonos" name='phones'>
+          <Select defaultValue={[]} ref={phonesRef} mode="tags" style={{ width: '100%' }}
+                  placeholder="Escriba los números de teléfono del empleado"/>
+        </Form.Item>
+
         <Form.Item label="Pin" name='pin'
                    rules={ state.editMode ? [
                      {len: 5, message: 'El pin del empleado solo puede tener 5 números'},
@@ -210,12 +215,7 @@ const Employees = (props) => {
                      {required: true, message: 'El pin del empleado es requerido'},
                      {len: 5, message: 'El pin del empleado solo puede tener 5 números'},
                    ]}>
-          <Input placeholder="Escriba el correo del empleado"/>
-        </Form.Item>
-
-        <Form.Item label="Teléfonos" name='phones'>
-          <Select defaultValue={[]} ref={phonesRef} mode="tags" style={{ width: '100%' }}
-                  placeholder="Escriba los números de teléfono del empleado"/>
+          <Input placeholder="Escriba el pin del empleado"/>
         </Form.Item>
 
       </CrudForm>

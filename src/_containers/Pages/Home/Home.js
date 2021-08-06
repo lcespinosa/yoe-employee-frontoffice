@@ -11,6 +11,7 @@ import Tasks from "../Tasks/Tasks";
 import ManualEntries from "../ManualEntries/ManualEntries";
 import Entries from "../Entries/Entries";
 import Employees from "../Employees/Employees";
+import Managers from "../Managers/Managers";
 
 const {Content} = Layout;
 
@@ -42,6 +43,7 @@ const Home = (props) => {
               <PrivateRoute path={path + '/projects/:project/tasks'} component={Tasks} />
               <PrivateRoute path={path + '/projects'} component={Projects} />
 
+              <PrivateRoute path={path + '/managers'} component={Managers} />
               <PrivateRoute path={path + '/employees'} component={Employees} />
               <Redirect to={path + '/projects'} />
             </Switch>
